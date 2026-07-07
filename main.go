@@ -1,24 +1,20 @@
 package main
 
 import (
-	"io"
+	"os"
 
 	"log"
 	"net/http"
+
+	"github.com/microservices_grpc/handlers"
 )
 
 func main() {
-	http.HandleFunc("/", func(res http.ResponseWriter, req *http.Request) {
-		log.Println("hello world")
-		data, err := io.ReadAll(req.Body)
+	l := log.New(os.Stdout, "product-api", log.LstdFlags)
+	hh := handlers.NewHello(l)
+	sm := http.NewServeMux()
 
-		if err != nil {
-			res.WriteHeader(http.StatusBadRequest)
-			res.Write([]byte("An error occured"))
-			return
-		}
-		log.Println(string(data))
-	})
+	sm.Handle("/", hh)
 
 	http.ListenAndServe(":9090", nil)
 }
