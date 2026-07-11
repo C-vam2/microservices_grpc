@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 	"github.com/microservices_grpc/data"
 )
 
@@ -17,52 +17,72 @@ func NewProducts(l *log.Logger) *Products {
 	return &Products{l}
 }
 
-func (p *Products) GetProducts(rw http.ResponseWriter, r *http.Request) {
+func (p *Products) GetProducts(c *gin.Context) {
 	lp := data.GetProducts()
-	err := lp.ToJSON(rw)
+	err := lp.ToJSON(c.Writer)
 
 	if err != nil {
-		http.Error(rw, "Unable to marshal json", http.StatusInternalServerError)
+		c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "Unable to parse the product JSON",
+		})
 		return
 	}
 }
 
-func (p *Products) AddProduct(rw http.ResponseWriter, r *http.Request) {
+func (p *Products) AddProduct(c *gin.Context) {
 	p.l.Println("POST request triggered!!")
-	prod := &data.Product{}
-	err := prod.FromJSON(r.Body)
 
-	if err != nil {
-		http.Error(rw, "Unable to process request body.", http.StatusBadRequest)
+	prod := &data.Product{}
+	if err := c.ShouldBindJSON(&prod); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
 		return
 	}
+
 	data.AddProduct(prod)
 }
 
-func (p *Products) UpdateProduct(rw http.ResponseWriter, r *http.Request) {
+func (p *Products) UpdateProduct(c *gin.Context) {
 
-	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
+	id, err := strconv.Atoi(c.Param("id"))
 
 	if err != nil {
-		http.Error(rw, "Invalid product id", http.StatusBadRequest)
+		p.l.Println(err)
+		p.l.Println(c.Param("id"))
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid productID",
+		})
 		return
 	}
 
-	p.l.Println("PUT request triggered!!")
-	prod := &data.Product{}
-	err = prod.FromJSON(r.Body)
+	value, exists := c.Get("product")
 
-	if err != nil {
-		http.Error(rw, "Unable to process request body.", http.StatusBadRequest)
+	if !exists {
+		c.JSON(http.StatusInternalServerError, "Product not found in the request")
 		return
 	}
 
+	prod := value.(*data.Product)
 	err = data.UpdateProduct(id, prod)
 
 	if err != nil {
-		http.Error(rw, err.Error(), http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
 		return
 	}
 
+}
+
+func (p *Products) MiddlewareProductValidation(c *gin.Context) {
+	prod := &data.Product{}
+	if err := c.ShouldBindJSON(&prod); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	c.Set("product", prod)
+	c.Next()
 }
