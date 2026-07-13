@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/microservices_grpc/data"
 )
 
 // swagger: route DELETE /product/{id} products deleteProduct

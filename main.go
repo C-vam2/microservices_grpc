@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/microservices_grpc/data"
 	"github.com/microservices_grpc/handlers"
 
 	"github.com/gin-gonic/gin"
@@ -16,13 +17,14 @@ import (
 
 func main() {
 	l := log.New(os.Stdout, "product-api", log.LstdFlags)
-	ph := handlers.NewProducts(l)
+	v := &data.Validation{}
+	ph := handlers.NewProducts(l, v)
 
 	router := gin.Default()
 
-	router.GET("/", ph.GetProducts)
-	router.PUT("/:id", ph.MiddlewareProductValidation, ph.UpdateProduct)
-	router.POST("/", ph.MiddlewareProductValidation, ph.AddProduct)
+	router.GET("/")
+	router.PUT("/:id", ph.MiddlewareValicateProduct(), ph.Update)
+	router.POST("/", ph.MiddlewareValicateProduct(), ph.Create)
 
 	s := &http.Server{
 		Addr:         ":9090",
