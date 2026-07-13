@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"regexp"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -27,15 +26,6 @@ func (p *Product) Validate() error {
 	validator := validator.New()
 	validator.RegisterValidation("sku", validateSKU)
 	return validator.Struct(p)
-}
-
-func validateSKU(fl validator.FieldLevel) bool {
-	reg := regexp.MustCompile(`[a-z]+-[a-z]+-[a-z]+`)
-	matches := reg.FindAllString(fl.Field().String(), -1)
-	if len(matches) != 1 {
-		return false
-	}
-	return true
 }
 
 func (p *Product) FromJSON(r io.Reader) error {
@@ -74,6 +64,18 @@ func UpdateProduct(id int, p *Product) error {
 	}
 
 	return errors.New("Product not found with given id")
+}
+
+// findIndex find the index oof a product in the database
+// returns -1 when no product can be found
+func findIndexByProductID(id int) int {
+	for idx, prod := range productList {
+		if prod.ID == id {
+			return idx
+		}
+	}
+
+	return -1
 }
 
 var productList = Products{

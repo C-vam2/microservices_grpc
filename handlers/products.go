@@ -10,6 +10,8 @@ import (
 	"github.com/microservices_grpc/data"
 )
 
+const KeyProduct = "product"
+
 // Products handler for getting and updating products
 type Products struct {
 	l *log.Logger
