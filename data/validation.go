@@ -65,7 +65,8 @@ func NewValidation() *Validation {
 //				fmt.Println(ve.Param())
 //	}
 func (v *Validation) Validate(i interface{}) ValidationErrors {
-	errs := v.validate.Struct(i).(validator.ValidationErrors)
+	tmp := v.validate.Struct(i)
+	errs := tmp.(validator.ValidationErrors)
 
 	if len(errs) == 0 {
 		return nil

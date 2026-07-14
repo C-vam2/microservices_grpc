@@ -7,7 +7,7 @@ import (
 	"github.com/microservices_grpc/data"
 )
 
-// swagger:router GET /products products listProducts
+// swagger:route GET /products products listProducts
 // Return a list of products from the database
 // responses:
 //  200: productsResponse
@@ -18,11 +18,10 @@ func (p *Products) ListAll(c *gin.Context) {
 
 	prods := data.GetProducts()
 
-	err := c.ShouldBindJSON(prods)
+	err := data.ToJSON(&prods, c.Writer)
 
 	if err != nil {
-		// we should never be here but log the error just incase
-		p.l.Println("[ERROR] serializing product", err)
+		c.JSON(http.StatusOK, gin.H{})
 	}
 }
 

@@ -16,15 +16,16 @@ import (
 )
 
 func main() {
-	l := log.New(os.Stdout, "product-api", log.LstdFlags)
+	l := log.New(os.Stdout, "product-api ", log.LstdFlags)
 	v := &data.Validation{}
 	ph := handlers.NewProducts(l, v)
 
 	router := gin.Default()
 
-	router.GET("/")
+	router.GET("/", ph.ListAll)
 	router.PUT("/:id", ph.MiddlewareValicateProduct(), ph.Update)
 	router.POST("/", ph.MiddlewareValicateProduct(), ph.Create)
+	router.StaticFile("/swagger.yaml", "./swagger.yaml")
 
 	s := &http.Server{
 		Addr:         ":9090",
