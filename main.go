@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/go-openapi/runtime/server-middleware/docui"
 	"github.com/microservices_grpc/data"
 	"github.com/microservices_grpc/handlers"
 
@@ -25,7 +26,11 @@ func main() {
 	router.GET("/", ph.ListAll)
 	router.PUT("/:id", ph.MiddlewareValicateProduct(), ph.Update)
 	router.POST("/", ph.MiddlewareValicateProduct(), ph.Create)
+	router.DELETE("/:id", ph.Delete)
 	router.StaticFile("/swagger.yaml", "./swagger.yaml")
+
+	redoc := docui.Redoc(nil, docui.WithSpecURL("/swagger.yaml"))
+	router.GET("/docs", handlers.Wrap(redoc))
 
 	s := &http.Server{
 		Addr:         ":9090",
